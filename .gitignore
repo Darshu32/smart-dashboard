@@ -1,26 +1,7 @@
-# Ignore node_modules
+# .gitignore
 node_modules/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build output
 dist/
-build/
-
-# Local env files
 .env
-.env.local
-
-# OS-specific files
 .DS_Store
-Thumbs.db
-
-# Vercel config
-.vercel
-
-# Optional: ignore IDE configs
-.vscode/
-.idea/
+.next/
+.vercel/
