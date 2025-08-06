@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
+import { FiClipboard } from "react-icons/fi";
+
 import { useAuth } from "../context/AuthContext";
 import {
   collection,
@@ -31,6 +33,7 @@ export default function TaskManager() {
   const [filterPriority, setFilterPriority] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
 
+  // ✅ Realtime sync with Firestore
   useEffect(() => {
     if (!user) return;
 
@@ -83,17 +86,13 @@ export default function TaskManager() {
   });
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center p-6"
-      style={{
-        backgroundImage:
-          "url('https://images.rawpixel.com/image_png_social_landscape/cHJpdmF0ZS90ZW1wbGF0ZXMvZmlsZXMvY3JlYXRlX3Rvb2wvMjAyMy0wNy8wMWdnbnhja3hyM3hnZjR5c3FtMngxdzJxYy1sa2IyenlmOC5wbmc.png')",
-      }}
-    >
-      <div className="p-6 rounded-xl bg-white/80 backdrop-blur-md shadow-lg w-full max-w-4xl mx-auto mt-10">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          📝 Task Manager
-        </h2>
+    <div className="min-h-screen bg-[#0f0f11] text-white px-6 py-10">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 w-full max-w-5xl mx-auto shadow-2xl">
+        <h2 className="text-3xl font-bold mb-8 text-center text-pink-500 flex items-center justify-center gap-2">
+  <FiClipboard className="text-4xl" />
+  Task Manager
+</h2>
+
 
         {/* Add Task Form */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -101,13 +100,13 @@ export default function TaskManager() {
             type="text"
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
-            placeholder="Enter task..."
-            className="border p-2 rounded-md flex-1"
+            placeholder="Enter a new task..."
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg flex-1 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border p-2 rounded-md"
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-white"
           >
             <option>Work</option>
             <option>Personal</option>
@@ -117,7 +116,7 @@ export default function TaskManager() {
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="border p-2 rounded-md"
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-white"
           >
             <option>Low</option>
             <option>Medium</option>
@@ -125,18 +124,18 @@ export default function TaskManager() {
           </select>
           <button
             onClick={handleAddTask}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow"
+            className="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-lg transition shadow-md"
           >
-            Add
+            Add Task
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-between">
+        <div className="flex flex-wrap gap-4 mb-8 justify-between">
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="border p-2 rounded-md"
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-white"
           >
             <option>All</option>
             <option>Work</option>
@@ -147,7 +146,7 @@ export default function TaskManager() {
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="border p-2 rounded-md"
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-white"
           >
             <option>All</option>
             <option>Low</option>
@@ -157,7 +156,7 @@ export default function TaskManager() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="border p-2 rounded-md"
+            className="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-white"
           >
             <option>All</option>
             <option>Completed</option>
@@ -168,27 +167,27 @@ export default function TaskManager() {
         {/* Task List */}
         <ul className="space-y-4">
           {filteredTasks.length === 0 && (
-            <p className="text-gray-500 text-center">
-              No matching tasks found.
-            </p>
+            <p className="text-gray-400 text-center">No tasks found.</p>
           )}
           {filteredTasks.map((task) => (
             <li
               key={task.id}
-              className={`flex justify-between items-center border p-4 rounded-md shadow-sm ${
-                task.completed ? "bg-green-100" : "bg-white"
+              className={`flex justify-between items-center px-4 py-3 rounded-xl border ${
+                task.completed
+                  ? "bg-green-400/10 border-green-400/30 text-green-300"
+                  : "bg-white/10 border-white/20"
               }`}
             >
               <div>
                 <p
                   className={`font-semibold ${
-                    task.completed ? "line-through text-gray-400" : ""
+                    task.completed ? "line-through opacity-70" : ""
                   }`}
                 >
                   {task.name}
                 </p>
-                <p className="text-sm text-gray-500">
-                  📂 {task.category} | ⚡ {task.priority}
+                <p className="text-sm text-gray-300">
+                  📁 {task.category} | ⚡ {task.priority}
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -196,10 +195,11 @@ export default function TaskManager() {
                   type="checkbox"
                   checked={task.completed}
                   onChange={() => toggleComplete(task.id, task.completed)}
+                  className="w-5 h-5 accent-pink-500"
                 />
                 <button
                   onClick={() => handleDelete(task.id)}
-                  className="text-red-500 hover:text-red-700 font-semibold"
+                  className="text-red-500 hover:text-red-700 font-semibold text-lg"
                 >
                   ✕
                 </button>

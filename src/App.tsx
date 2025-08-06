@@ -1,103 +1,97 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import Pomodoro from "./pages/pomodoro";
-import TaskManager from "./pages/TaskManager";
-import WeeklyPlanner from "./pages/WeeklyPlanner";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login"; // 🔥 Add this line
+import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Stats from "./pages/Stats";
-import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard";
+import PomodoroPage from "./pages/pomodoro";
+import TaskManagerPage from "./pages/TaskManager";
+import WeeklyPlannerPage from "./pages/WeeklyPlanner";
+import StatsPage from "./pages/Stats";
+import ProfilePage from "./pages/Profile";
+import AIAssistant from "./pages/AIAssistantPage";
+import { useAuth } from "./context/AuthContext";
+import { JSX } from "react";
 
+const App = () => {
+  const { user } = useAuth();
 
-export default function App() {
+  // 🔒 Protect routes from unauthenticated access
+  const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    if (!user) {
+      return <Navigate to="/login" />;
+    }
+    return children;
+  };
+
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Public Landing Page */}
+        {/* 🌐 Public Routes */}
         <Route path="/" element={<LandingPage />} />
-
-        {/* Login Route (Public) */}
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
 
-
-        {/* Pomodoro Route (Protected) */}
+        {/* 🔐 Protected Dashboard & Feature Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/pomodoro"
           element={
             <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <main className="ml-64 w-full min-h-screen bg-[#f4f5f7] p-6">
-                  <Pomodoro />
-                </main>
-              </div>
+              <PomodoroPage />
             </ProtectedRoute>
           }
         />
-
-        {/* Task Manager Route (Protected) */}
         <Route
-          path="/tasks"
+          path="/TaskManager"
           element={
             <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <main className="ml-64 w-full min-h-screen bg-[#f4f5f7] p-6">
-                  <TaskManager />
-                </main>
-              </div>
+              <TaskManagerPage />
             </ProtectedRoute>
           }
         />
-
-        {/* Weekly Planner Route (Protected) */}
         <Route
-          path="/planner"
+          path="/WeeklyPlanner"
           element={
             <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <main className="ml-64 w-full min-h-screen bg-[#f4f5f7] p-6">
-                  <WeeklyPlanner />
-                </main>
-              </div>
+              <WeeklyPlannerPage />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/stats"
+          element={
+            <ProtectedRoute>
+              <StatsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute>
+              <AIAssistant/>
+            </ProtectedRoute>
+         }
+        />
 
         <Route
-  path="/stats"
-  element={
-    <ProtectedRoute>
-      <div className="flex">
-        <Sidebar />
-        <main className="ml-64 w-full min-h-screen bg-[#f4f5f7] p-6">
-          <Stats />
-        </main>
-      </div>
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <div className="flex">
-        <Sidebar />
-        <main className="ml-64 w-full min-h-screen bg-[#f4f5f7] p-6">
-          <Profile />
-        </main>
-      </div>
-    </ProtectedRoute>
-  }
-/>
-
-
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
-}
+};
+
+export default App;

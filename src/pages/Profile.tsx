@@ -3,6 +3,7 @@ import { auth, db, storage } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
+import { FiUser } from "react-icons/fi";
 
 export default function Profile() {
   const user = auth.currentUser;
@@ -16,21 +17,18 @@ export default function Profile() {
 
     let photoURL = user.photoURL;
 
-    // 🔥 If a new image is selected, upload it
     if (image) {
       const storageRef = ref(storage, `avatars/${user.uid}`);
       await uploadBytes(storageRef, image);
       photoURL = await getDownloadURL(storageRef);
     }
 
-    // 🔥 Save name + photoURL to Firestore
     const userRef = doc(db, "users", user.uid);
     await setDoc(userRef, {
       name,
       photoURL,
     });
 
-    // ✅ Optionally update Firebase Auth profile
     await updateProfile(user, {
       displayName: name,
       photoURL,
@@ -41,15 +39,14 @@ export default function Profile() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center flex items-center justify-center px-4"
-      style={{
-        backgroundImage:
-          "url('https://cdn.pixabay.com/animation/2022/12/05/10/47/10-47-58-930_512.gif')",
-      }}
-    >
-      <div className="w-full max-w-md p-6 bg-white/80 backdrop-blur-md rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">👤 Profile Settings</h2>
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 text-white">
+
+      <div className="w-full max-w-md p-6 bg-zinc-900 rounded-2xl shadow-xl">
+        <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2 text-pink-500">
+
+          <FiUser className="text-pink-500 text-3xl" /> {/* ✅ Icon here */}
+          Profile Settings
+        </h2>
 
         <div className="flex flex-col gap-4">
           <input
@@ -57,20 +54,20 @@ export default function Profile() {
             placeholder="Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border p-2 rounded"
+            className="border border-gray-700 bg-zinc-800 p-2 rounded text-white placeholder-gray-400"
           />
 
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setImage(e.target.files?.[0] || null)}
-            className="border p-2 rounded"
+            className="border border-gray-700 bg-zinc-800 p-2 rounded text-white"
           />
 
           <button
             onClick={handleSave}
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition"
           >
             {loading ? "Saving..." : "Save Profile"}
           </button>

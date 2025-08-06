@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { auth } from "../firebase";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useNavigate, Link } from "react-router-dom";
+import { auth } from "../firebase";
+import { motion } from "framer-motion";
 
-export default function Login() {
+const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,75 +16,86 @@ export default function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/pomodoro"); // redirect on success
+      navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      const errorCode = err.code;
+      let message = "Login failed. Please try again.";
+
+      switch (errorCode) {
+        case "auth/invalid-email":
+          message = "Invalid email format.";
+          break;
+        case "auth/user-not-found":
+          message = "No account found with this email.";
+          break;
+        case "auth/wrong-password":
+          message = "Incorrect password.";
+          break;
+        case "auth/too-many-requests":
+          message = "Too many failed attempts. Try again later.";
+          break;
+      }
+
+      setError(message);
     }
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center px-4"
-      style={{
-        backgroundImage:
-          "url('https://img.freepik.com/premium-photo/abstract-background-beautiful-close-up-image-wallpaper-ai-generated_859483-200869.jpg')",
-      }}
+    <motion.div
+      className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
     >
-      <div className="absolute inset-0 bg-black/40 z-0" />
+      {/* Background Layer (copied from LandingPage) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="w-full h-full bg-gradient-to-br from-black via-gray-900 to-black animate-pulse opacity-30" />
+        <div className="absolute top-1/4 left-1/3 w-[60vw] h-[60vw] rounded-full bg-gradient-radial from-gray-700 via-gray-900 to-black blur-3xl opacity-40 animate-[spin_60s_linear_infinite]" />
+        <div className="absolute bottom-10 right-10 w-[40vw] h-[40vw] rounded-full bg-gradient-radial from-white/10 to-transparent blur-2xl opacity-20" />
+      </div>
 
-      <div className="relative z-10 bg-white/90 backdrop-blur-md shadow-xl rounded-xl p-10 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Login to Your Dashboard
-        </h2>
-
+      {/* Login Box */}
+      <div className="relative z-10 w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-black">
+        <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
         {error && (
           <p className="mb-4 text-red-500 text-sm text-center">{error}</p>
         )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Email Address
+            </label>
             <input
               type="email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-400"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              className="mt-1 p-3 w-full border rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="you@example.com"
             />
           </div>
-
           <div>
-            <label className="block text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-400"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              className="mt-1 p-3 w-full border rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your password"
             />
           </div>
-
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+            className="w-full bg-pink-600 text-white py-3 rounded-md hover:bg-pink-700 transition"
           >
             Login
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Don’t have an account yet?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
-            Register here
-          </Link>
-        </div>
-
-        <div className="mt-2 text-center text-sm">
-          <Link to="/forgot-password" className="text-blue-500 hover:underline">
-            Forgot password?
-          </Link>
-        </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
+
+export default Login;

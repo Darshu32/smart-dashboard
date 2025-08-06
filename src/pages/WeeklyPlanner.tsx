@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { FiCalendar } from "react-icons/fi";
+
 import { db } from "../firebase";
 import {
   collection,
@@ -63,23 +65,20 @@ export default function WeeklyPlanner() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center p-6"
-      style={{
-        backgroundImage:
-          "url('https://static.vecteezy.com/system/resources/previews/007/184/268/non_2x/calendar-and-caspia-flower-on-table-wooden-day-celebration-free-photo.jpg')",
-      }}
-    >
-      <div className="p-6 rounded-xl bg-white/80 backdrop-blur-md shadow-lg w-full max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          📅 Weekly Planner
-        </h2>
+    <div className="min-h-screen bg-neutral-950 p-6 text-white">
+      <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-lg shadow-xl w-full max-w-2xl mx-auto border border-white/20">
+        <h2 className="text-3xl font-semibold mb-6 text-center text-pink-500 flex items-center justify-center gap-2">
+          <FiCalendar className="text-4xl" />
+            Weekly Planner
+          </h2>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
+
+
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <DatePicker
             selected={selectedDate}
             onChange={(date) => setSelectedDate(date)}
-            className="px-4 py-2 border rounded-md shadow"
+            className="px-4 py-2 rounded-md bg-neutral-800 text-white border border-white/20 shadow"
           />
 
           <input
@@ -87,12 +86,12 @@ export default function WeeklyPlanner() {
             placeholder="Enter task"
             value={task}
             onChange={(e) => setTask(e.target.value)}
-            className="flex-1 px-4 py-2 border rounded-md shadow"
+            className="flex-1 px-4 py-2 rounded-md bg-neutral-800 text-white border border-white/20 shadow"
           />
 
           <button
             onClick={addTask}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+            className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-md transition shadow"
           >
             Add Task
           </button>
@@ -104,10 +103,10 @@ export default function WeeklyPlanner() {
             {Array.from(new Set(tasks.map((t) => t.date))).map((date) => (
               <div
                 key={date}
-                className="bg-white p-4 rounded shadow backdrop-blur-md"
+                className="bg-white/5 border border-white/10 rounded-lg p-4 shadow"
               >
-                <h3 className="font-semibold text-lg text-blue-700">{date}</h3>
-                <ul className="list-disc list-inside text-gray-700 mt-2">
+                <h3 className="text-lg font-bold text-blue-400">{date}</h3>
+                <ul className="list-disc list-inside text-gray-300 mt-2">
                   {tasks
                     .filter((t) => t.date === date)
                     .map((t, idx) => (
@@ -118,7 +117,7 @@ export default function WeeklyPlanner() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-700 text-center">No tasks added yet.</p>
+          <p className="text-gray-400 text-center">No tasks added yet.</p>
         )}
       </div>
     </div>
