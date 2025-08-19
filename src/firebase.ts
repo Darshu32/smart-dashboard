@@ -7,12 +7,12 @@ import { getAnalytics } from "firebase/analytics";
 
 // 🔐 Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyDUwJfk8nujG1xzRQZ6Rme8puP511WAiww",
-  authDomain: "smart-productivity-dashb-c4a24.firebaseapp.com",
-  projectId: "smart-productivity-dashb-c4a24",
-  appId: "1:199931437019:web:3b08bbf1e74117cadd11fe",
-  storageBucket: "smart-productivity-dashb-c4a24.firebasestorage.app",      
-  messagingSenderId: "G-8V12M70VW7",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,      
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 };
 
 const app = initializeApp(firebaseConfig);

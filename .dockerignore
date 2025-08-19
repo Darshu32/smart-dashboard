@@ -1,6 +1,5 @@
 node_modules
 dist
-.dockerignore
 .git
-.env
-.env.*          # ignores all other env files like .env.frontend
+
+
