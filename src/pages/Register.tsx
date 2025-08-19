@@ -1,3 +1,5 @@
+// src/pages/Register.tsx
+
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -24,7 +26,7 @@ export default function Register() {
 
     try {
       await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
-      navigate("/pomodoro");
+      navigate("/Dashboard");
     } catch (err: any) {
       switch (err.code) {
         case "auth/email-already-in-use":

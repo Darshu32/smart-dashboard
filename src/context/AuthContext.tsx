@@ -52,4 +52,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 // STEP 4: useAuth hook
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext);   

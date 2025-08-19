@@ -5,6 +5,8 @@ import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { LogOut, Menu, Timer, CheckSquare, CalendarDays, BarChart3, Bot, User } from "lucide-react";
 
+const LOCAL_STORAGE_KEY = "userProfile";
+
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,22 +16,43 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false); // toggle for mobile
 
   const handleLogout = () => {
-    signOut(auth).then(() => navigate("/login"));
+    signOut(auth).then(() => navigate("/Login"));
   };
 
   useEffect(() => {
+    // 1. Try localStorage first
+    const storedProfile = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        setName(parsed.name || "");
+        setPhoto(parsed.photoURL || "");
+      } catch {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
+    }
+
+    // 2. Then fetch fresh profile from Firestore (if user logged in)
     const fetchProfile = async () => {
       if (!user) return;
       const docRef = doc(db, "users", user.uid);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        setName(snap.data().name || "");
-        setPhoto(snap.data().photoURL || "");
+        const data = snap.data();
+        const fetchedName = data.name || "";
+        const fetchedPhoto = data.photoURL || "";
+        setName(fetchedName);
+        setPhoto(fetchedPhoto);
+
+        // Update localStorage cache
+        localStorage.setItem(
+          LOCAL_STORAGE_KEY,
+          JSON.stringify({ name: fetchedName, photoURL: fetchedPhoto })
+        );
       }
     };
     fetchProfile();
   }, [user]);
-
   const navLinks = [
     { name: "Pomodoro", to: "/pomodoro", icon: <Timer size={18} /> },
     { name: "Task Manager", to: "/TaskManager", icon: <CheckSquare size={18} /> },

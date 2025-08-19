@@ -1,56 +1,129 @@
 // src/pages/AIAssistantPage.tsx
-import React, { useState } from 'react';
-import ChatMessageComponent from '../components/ChatMessage';
-import { ChatMessage } from '../types/chatTypes';
-import { sendMessageToAI } from '../services/openaiService';
+import React, { useState, useEffect } from "react";
+import ChatMessageComponent from "../components/ChatMessage";
+import { ChatMessage } from "../types/chatTypes";
+import { sendMessageToAI } from "../services/openaiService";
 import { SiOpenai } from "react-icons/si";
-import ReactMarkdown from 'react-markdown';
-import { useEffect } from 'react';
+import ReactMarkdown from "react-markdown";
+import BackButton from "../components/BackButton";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth } from "../firebase";
+
+const STORAGE_KEY = "aiChatMessages";
 
 const AIAssistantPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  //🔹 Load messages from sessionStorage on first render
+  // Load from localStorage first
   useEffect(() => {
-    const stored = sessionStorage.getItem('aiMessages');
-    if (stored) {
-      setMessages(JSON.parse(stored));
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setMessages(
+            parsed.map((m: any) => ({
+              ...m,
+              timestamp: new Date(m.timestamp),
+            }))
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse localStorage messages", e);
     }
   }, []);
 
-  // 🔹 Save messages to sessionStorage every time they change
+  // Load from Firestore, but only if it contains messages (otherwise keep localStorage data)
   useEffect(() => {
-    sessionStorage.setItem('aiMessages', JSON.stringify(messages));
+    const loadFromFirestore = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const chatRef = doc(db, "users", user.uid, "data", "aiChat");
+        const snap = await getDoc(chatRef);
+        if (snap.exists()) {
+          const data = snap.data().messages;
+          if (Array.isArray(data) && data.length > 0) {
+            setMessages(
+              data.map((m: any) => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Error loading chat from Firestore:", err);
+      }
+    };
+    loadFromFirestore();
+  }, []);
+
+  // Save messages to localStorage and Firestore (if logged in)
+  useEffect(() => {
+    // Always save to localStorage
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch (e) {
+      console.error("Failed to save messages to localStorage", e);
+    }
+
+    const saveToFirestore = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      if (messages.length === 0) return;
+
+      try {
+        const chatRef = doc(db, "users", user.uid, "data", "aiChat");
+        await setDoc(
+          chatRef,
+          {
+            messages: messages.map((m) => ({
+              ...m,
+              timestamp: m.timestamp.toISOString(),
+            })),
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error("Error saving chat to Firestore:", err);
+      }
+    };
+
+    saveToFirestore();
   }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg: ChatMessage = {
-      sender: 'user',
+      sender: "user",
       content: input,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
     setLoading(true);
 
     try {
       const reply = await sendMessageToAI(input);
       const aiMsg: ChatMessage = {
-        sender: 'assistant',
+        sender: "assistant",
         content: reply,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiMsg]);
-    } catch (err) {
-      setMessages(prev => [
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      setMessages((prev) => [
         ...prev,
         {
-          sender: 'assistant',
-          content: '❌ Failed to get response.',
+          sender: "assistant",
+          content: "❌ Failed to get response.",
           timestamp: new Date(),
         },
       ]);
@@ -60,18 +133,31 @@ const AIAssistantPage: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSend();
+    if (e.key === "Enter") handleSend();
   };
+
 
   return (
     <div className="h-screen bg-zinc-900 text-pink-400 flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-zinc-700">
-        <h1 className="text-2xl font-bold mb-6 text-pink-500 flex items-center gap-2">
-  <SiOpenai className="w-6 h-6 text-pink-500" />
-  AI Assistant
-</h1>
-      </div>
+  {/* Header */}
+  <div className="p-4 border-b border-zinc-700 flex items-center justify-between relative">
+
+    {/* Back Button - top-left */}
+    <div className="absolute left-4">
+      <BackButton to="/dashboard" />
+    </div>
+
+    {/* Title in center */}
+    <div className="w-full flex justify-center">
+      <h1 className="text-2xl font-bold text-pink-500 flex items-center gap-3">
+        <SiOpenai className="w-6 h-6 text-pink-500" />
+        AI Assistant
+      </h1>
+    </div>
+
+  </div>
+
+
 
       {/* Chat Messages */}
 <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
@@ -120,4 +206,4 @@ const AIAssistantPage: React.FC = () => {
   );
 };
 
-export default AIAssistantPage;
+export default AIAssistantPage; 

@@ -13,7 +13,8 @@ import { useAuth } from "./context/AuthContext";
 import { JSX } from "react";
 
 const App = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const hasClickedGetStarted = localStorage.getItem("hasClickedGetStarted");
 
   // 🔒 Protect routes from unauthenticated access
   const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -28,8 +29,21 @@ const App = () => {
       <Routes>
         {/* 🌐 Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+
+
+      <Route
+        path="/login"
+        element={user ? <Navigate to="/dashboard" /> : <Login />}
+      />
+
+      <Route
+        path="/register"
+        element={user ? <Navigate to="/dashboard" /> : <Register />}
+      />
+
+      <Route path="*" element={<Navigate to="/" />} />
+
+
 
         {/* 🔐 Protected Dashboard & Feature Routes */}
         <Route

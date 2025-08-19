@@ -1,7 +1,6 @@
 // src/context/TaskContext.tsx
 import {
   collection,
-  getDocs,
   addDoc,
   deleteDoc,
   doc,
@@ -19,22 +18,30 @@ interface Task {
 
 interface TaskContextType {
   tasks: Task[];
+  loadingTasks: boolean;
   addTask: (title: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextType>({
   tasks: [],
+  loadingTasks: true,
   addTask: async () => {},
   deleteTask: async () => {},
 });
 
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const { user } = useAuth();
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    // Wait until auth is finished and user exists
+    if (authLoading || !user?.uid) {
+      setTasks([]);
+      setLoadingTasks(false);
+      return;
+    }
 
     const tasksRef = collection(db, "users", user.uid, "tasks");
 
@@ -44,25 +51,28 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         ...(doc.data() as Omit<Task, "id">),
       }));
       setTasks(fetchedTasks);
+      setLoadingTasks(false);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, authLoading]);
 
   const addTask = async (title: string) => {
-    if (!user) return;
+    if (!user?.uid) throw new Error("User not authenticated");
     const taskRef = collection(db, "users", user.uid, "tasks");
     await addDoc(taskRef, { title, completed: false });
   };
 
   const deleteTask = async (id: string) => {
-    if (!user) return;
+    if (!user?.uid) throw new Error("User not authenticated");
     const taskDoc = doc(db, "users", user.uid, "tasks", id);
     await deleteDoc(taskDoc);
   };
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, deleteTask }}>
+    <TaskContext.Provider
+      value={{ tasks, loadingTasks, addTask, deleteTask }}
+    >
       {children}
     </TaskContext.Provider>
   );

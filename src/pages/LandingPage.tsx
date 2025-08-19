@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Lightbulb, Timer, ClipboardList, CalendarCheck } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Navigate, useNavigate} from "react-router-dom";
 
 const quickFeatures = [
   "Pomodoro Timer",
@@ -11,6 +15,23 @@ const quickFeatures = [
 ];
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
+   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+   const handleGetStarted = () => {
+  localStorage.setItem("hasClickedGetStarted", "true");
+
+  if (user) {
+    navigate("/dashboard");
+  } else {
+    navigate("/register");
+  }
+};
+
+  // Wait for auth to finish loading before rendering UI
+  if (loading) return null;
+
   return (
     <div className="relative min-h-screen bg-black text-white font-sans scroll-smooth overflow-hidden">
       
@@ -29,23 +50,50 @@ export default function LandingPage() {
         className="sticky top-0 z-50 bg-black/80 backdrop-blur-lg shadow"
       >
         <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          {/* Logo */}
           <div className="flex flex-col">
             <span className="text-xl font-bold text-white">Smart AI Dashboard</span>
             <span className="text-xs text-gray-400">your dashboard as your co-pilot</span>
           </div>
 
+          {/* Desktop menu */}
           <div className="space-x-6 hidden md:flex items-center text-sm">
-            <a href="#features" className="hover:text-pink-400 transition">Features</a>
-            <a href="#download" className="hover:text-pink-400 transition">Download</a>
-            <Link to="/login" className="text-white hover:text-pink-400">Login</Link>
+            
+            
+            <div className="mt-6">
+        <button
+          onClick={handleGetStarted}
+          className="bg-pink-600 text-white px-6 py-3 rounded-md hover:bg-pink-700 transition"
+        >
+          Get Started
+        </button>
+      </div>
+            
+          </div>
+
+          {/* Hamburger for mobile */}
+          <button
+            className="md:hidden text-white"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </nav>
+
+        {/* Mobile dropdown menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-black/90 px-6 pb-6 space-y-4 text-sm text-white">
+            <a href="#features" className="block hover:text-pink-400 transition">Features</a>
+            <a href="#download" className="block hover:text-pink-400 transition">Download</a>
+            <Link to="/login" className="block hover:text-pink-400 transition">Login</Link>
             <Link
               to="/register"
-              className="bg-pink-600 hover:bg-pink-700 transition text-white px-4 py-2 rounded-lg shadow"
+              className="block bg-pink-600 hover:bg-pink-700 transition text-white px-4 py-2 rounded-lg shadow"
             >
               Get Started
             </Link>
           </div>
-        </nav>
+        )}
       </motion.header>
 
       {/* Hero */}
@@ -150,7 +198,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      
+
 {/* Dashboard + AI Assistant Showcase Section */}
 <section className="bg-black text-white py-20 px-6 md:px-20 border-t border-white/10">
   <div className="max-w-6xl mx-auto">

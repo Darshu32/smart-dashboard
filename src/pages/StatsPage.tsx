@@ -1,3 +1,5 @@
+// src/pages/StatsPage.tsx
+
 import React from "react";
 import WeeklyChart from "../components/WeeklyChart";
 import Stats from "./Stats"; // your existing summary stats

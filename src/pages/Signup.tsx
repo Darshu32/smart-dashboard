@@ -1,3 +1,5 @@
+// src/pages/Signup.tsx
+
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -19,7 +21,7 @@ export default function Signup() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/pomodoro");
+      navigate("/Dashboard");
     } catch (err: any) {
       console.error("Signup Error:", err.message);
       

@@ -1,4 +1,6 @@
 // src/pages/Dashboard.tsx
+
+
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
@@ -18,12 +20,10 @@ import {
 } from "firebase/firestore";
 
 import {
-  FaRegClock,        // Pomodoro Timer
-  FaTasks,           // Task Manager
-  FaChartBar,        // Productivity Stats
-  FaCalendarAlt,     // Weekly Planner
-  FaUserCircle,      // Profile (not used here but useful later)
-             // AI Assistant
+  FaRegClock,
+  FaTasks,
+  FaChartBar,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { SiOpenai } from "react-icons/si";
 
@@ -39,6 +39,13 @@ type WeeklyTask = {
   text: string;
 };
 
+interface PomodoroLog {
+  date: string;
+  duration: number;
+}
+
+const GOAL_MINUTES = 100; // Set your daily focus goal here
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -48,8 +55,27 @@ const Dashboard: React.FC = () => {
   const [weeklyTasks, setWeeklyTasks] = useState<WeeklyTask[]>([]);
   const [input, setInput] = useState("");
 
+  // Initialize today's focus from localStorage if available
+  const [todayFocus, setTodayFocus] = useState(() => {
+    const cachedLogs = localStorage.getItem("pomodoroLogs");
+    if (cachedLogs) {
+      const logs: PomodoroLog[] = JSON.parse(cachedLogs);
+      const todayStr = new Date().toDateString();
+      return logs
+        .filter((log) => log.date === todayStr)
+        .reduce((sum, log) => sum + log.duration, 0);
+    }
+    return 0;
+  });
+
+  // Load tasks (localStorage + Firestore)
   useEffect(() => {
     if (!user) return;
+
+    const savedTasks = localStorage.getItem("tasks");
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
 
     const q = query(
       collection(db, "tasks"),
@@ -64,28 +90,29 @@ const Dashboard: React.FC = () => {
         name: doc.data().name,
         completed: doc.data().completed,
       })) as Task[];
+
       setTasks(fetchedTasks);
+      localStorage.setItem("tasks", JSON.stringify(fetchedTasks));
     });
 
     return () => unsubscribe();
   }, [user]);
 
+  // Toggle complete for a task
   const toggleComplete = async (task: Task) => {
     await updateDoc(doc(db, "tasks", task.id), {
       completed: !task.completed,
     });
   };
 
-  const handleStartPomodoro = () => {
-    navigate("/pomodoro");
-  };
-
-  const handleAIAssistant = () => {
-    navigate("/assistant");
-  };
-
+  // Load weekly tasks (localStorage + Firestore)
   useEffect(() => {
     if (!user) return;
+
+    const savedWeeklyTasks = localStorage.getItem(`weeklyTasks_${selectedDay}`);
+    if (savedWeeklyTasks) {
+      setWeeklyTasks(JSON.parse(savedWeeklyTasks));
+    }
 
     const q = query(
       collection(db, "weeklyTasks"),
@@ -99,12 +126,15 @@ const Dashboard: React.FC = () => {
         day: doc.data().day,
         text: doc.data().text,
       })) as WeeklyTask[];
+
       setWeeklyTasks(data);
+      localStorage.setItem(`weeklyTasks_${selectedDay}`, JSON.stringify(data));
     });
 
     return () => unsubscribe();
   }, [user, selectedDay]);
 
+  // Add new weekly task
   const addWeeklyTask = async () => {
     if (!input.trim() || !user) return;
 
@@ -117,10 +147,53 @@ const Dashboard: React.FC = () => {
     setInput("");
   };
 
+  // Delete weekly task
   const deleteWeeklyTask = async (id: string) => {
     await deleteDoc(doc(db, "weeklyTasks", id));
   };
 
+  // Listen to pomodoroLogs for updating todayFocus progress bar
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "users", user.uid, "pomodoroLogs"),
+      orderBy("startedAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const logs: PomodoroLog[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        logs.push({
+          date: data.date,
+          duration: data.duration,
+        });
+      });
+
+      localStorage.setItem("pomodoroLogs", JSON.stringify(logs));
+
+      const todayStr = new Date().toDateString();
+      const todayTotal = logs
+        .filter((log) => log.date === todayStr)
+        .reduce((sum, log) => sum + log.duration, 0);
+
+      setTodayFocus(todayTotal);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleStartPomodoro = () => {
+    navigate("/pomodoro");
+  };
+
+  const handleAIAssistant = () => {
+    navigate("/assistant");
+  };
+
+  // Calculate progress % (max 100%)
+  const progressPercent = Math.min((todayFocus / GOAL_MINUTES) * 100, 100);
   return (
     <div className="flex bg-[#0f0f11] min-h-screen text-white">
       <Sidebar />
@@ -128,7 +201,7 @@ const Dashboard: React.FC = () => {
       <main className="ml-0 md:ml-64 flex-1 p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">
-            Welcome back, <span className="text-pink-400">{displayName}</span>!
+            Welcome back <span className="text-pink-400"></span>!
           </h1>
           <p className="text-sm text-gray-400">
             Let's boost your productivity today 
@@ -185,8 +258,7 @@ const Dashboard: React.FC = () => {
               </ul>
             )}
           </div>
-
-          {/* Productivity Stats */}
+{/* Productivity Stats */}
           <div
             className="bg-zinc-900 rounded-xl p-5 shadow-lg cursor-pointer hover:bg-zinc-800 transition"
             onClick={() => navigate("/stats")}
@@ -196,12 +268,12 @@ const Dashboard: React.FC = () => {
             </h2>
             <div className="w-full h-2 bg-gray-700 rounded-full">
               <div
-                className="bg-green-500 h-2 rounded-full"
-                style={{ width: "0%" }}
+                className="bg-green-500 h-2 rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
             <p className="text-xs text-right mt-1 text-gray-400">
-              0% of your goal
+              {Math.round(progressPercent)}% of your goal
             </p>
           </div>
 
@@ -218,9 +290,8 @@ const Dashboard: React.FC = () => {
                   onClick={() => setSelectedDay(day)}
                   className={`px-3 py-1 rounded-md text-sm ${
                     selectedDay === day
-  ? "bg-pink-600 text-white"
-  : "bg-zinc-800 text-gray-300"
-
+                      ? "bg-pink-600 text-white"
+                      : "bg-zinc-800 text-gray-300"
                   }`}
                 >
                   {day}
@@ -239,7 +310,6 @@ const Dashboard: React.FC = () => {
               <button
                 onClick={addWeeklyTask}
                 className="bg-pink-500 hover:bg-pink-600 px-4 py-2 rounded-md text-sm"
-
               >
                 Add
               </button>
@@ -256,7 +326,11 @@ const Dashboard: React.FC = () => {
                     key={task.id}
                     className="flex justify-between items-center bg-zinc-800 p-2 rounded"
                   >
-                    <span>{task.text}</span>
+                    {/* Show day label along with task text (fix #2) */}
+                    <span>
+                      <strong className="text-pink-400 mr-2">{task.day}:</strong>
+                      {task.text}
+                    </span>
                     <button
                       onClick={() => deleteWeeklyTask(task.id)}
                       className="text-red-400 hover:text-red-600 text-xs"
@@ -268,6 +342,7 @@ const Dashboard: React.FC = () => {
               </ul>
             )}
           </div>
+
 
           {/* AI Assistant */}
           <div className="bg-zinc-900 rounded-xl p-5 shadow-lg col-span-1 md:col-span-2 xl:col-span-3">
