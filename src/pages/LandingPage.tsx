@@ -12,6 +12,7 @@ const quickFeatures = [
   "Task Manager",
   "Analytics",
   "Smart Planner",
+  
 ];
 
 export default function LandingPage() {
@@ -83,9 +84,9 @@ export default function LandingPage() {
         {/* Mobile dropdown menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-black/90 px-6 pb-6 space-y-4 text-sm text-white">
-            <a href="#features" className="block hover:text-pink-400 transition">Features</a>
+            {/* <a href="#features" className="block hover:text-pink-400 transition">Features</a>
             <a href="#download" className="block hover:text-pink-400 transition">Download</a>
-            <Link to="/login" className="block hover:text-pink-400 transition">Login</Link>
+            <Link to="/login" className="block hover:text-pink-400 transition">Login</Link> */}
             <Link
               to="/register"
               className="block bg-pink-600 hover:bg-pink-700 transition text-white px-4 py-2 rounded-lg shadow"
