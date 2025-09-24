@@ -12,7 +12,7 @@ import { auth } from "../firebase";
 
 const STORAGE_KEY = "aiChatMessages";
 
-const AIAssistantPage: React.FC = () => {
+const AIAssistantPage: React.FC = () => { 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

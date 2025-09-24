@@ -12,7 +12,6 @@ const quickFeatures = [
   "Task Manager",
   "Analytics",
   "Smart Planner",
-  
 ];
 
 export default function LandingPage() {
